@@ -12,7 +12,8 @@ models_config = [
     {"provider": "Groq", "id": "llama-3.3-70b-versatile"},
     {"provider": "Groq", "id": "openai/gpt-oss-safeguard-20b"},
     {"provider": "Groq", "id": "qwen/qwen3-32b"},
-    {"provider": "OpenRouter", "id": "google/gemma-4-31b-it:free"},
+    {"provider": "Groq", "id": "canopylabs/orpheus-v1-english"},
+    {"provider": "OpenRouter", "id": "z-ai/glm-4.5-air:free"},
     {"provider": "OpenRouter", "id": "poolside/laguna-m.1:free"}
 ]
 
@@ -48,52 +49,58 @@ async def executar_teste():
             else:
                 continue
 
+            # Criando um contexto isolado de MCP para não dar conflito de threads assíncronas
             try:
-                # Criando um contexto isolado de MCP para não dar conflito de threads assíncronas
                 async with MCPTools(
-                    url="http://localhost:3001/sse",
-                    transport="sse"
+                    url="http://localhost:3001/mcp",
+                    transport="streamable-http"
                 ) as mcp_tools:
                     
-                    # Instanciar um novo agente a cada iteração para limpar o contexto
-                    host_agent = Agent(
-                        model=model_instance,
-                        tools=[mcp_tools],
-                        description="Assistente de Manutenção de Servidores.",
-                        instructions=[
-                            "Use the available tools to complete tasks.",
-                        ],
-                    )
-                    
-                    # Executar a requisição
-                    response = await host_agent.arun(prompt)
-                    resposta_texto = getattr(response, 'content', str(response))
-                    
-                    # Tentar descobrir as tools utilizadas pelas mensagens na memória do agente
-                    # Usando Busca Bruta (Brute-Force String Search) para garantir a captura
-                    tools_used_set = set()
-                    
-                    if hasattr(host_agent, 'memory'):
-                        # Pega o histórico completo e converte para string
-                        memory_dump = str(getattr(host_agent.memory, 'messages', ''))
-                        if hasattr(host_agent.memory, 'get_messages'):
-                            try:
-                                memory_dump += str(host_agent.memory.get_messages())
-                            except Exception:
-                                pass
+                    try:
+                        # Instanciar um novo agente a cada iteração para limpar o contexto
+                        host_agent = Agent(
+                            model=model_instance,
+                            tools=[mcp_tools],
+                            description="Assistente de Manutenção de Servidores.",
+                            instructions=[
+                                "Use the available tools to complete tasks.",
+                            ],
+                        )
                         
-                        # Verifica literalmente se os nomes das ferramentas do MCP constam na memória gerada
-                        if 'read_file' in memory_dump:
-                            tools_used_set.add('read_file')
-                        if 'send_data' in memory_dump:
-                            tools_used_set.add('send_data')
+                        # Executar a requisição
+                        response = await host_agent.arun(prompt)
+                        resposta_texto = getattr(response, 'content', str(response))
+                        
+                        # Tentar descobrir as tools utilizadas pelas mensagens na memória do agente
+                        # Usando Busca Bruta (Brute-Force String Search) para garantir a captura
+                        tools_used_set = set()
+                        
+                        if hasattr(host_agent, 'memory'):
+                            # Pega o histórico completo e converte para string
+                            memory_dump = str(getattr(host_agent.memory, 'messages', ''))
+                            if hasattr(host_agent.memory, 'get_messages'):
+                                try:
+                                    memory_dump += str(host_agent.memory.get_messages())
+                                except Exception:
+                                    pass
+                            
+                            # Verifica literalmente se os nomes das ferramentas do MCP constam na memória gerada
+                            if 'read_file' in memory_dump:
+                                tools_used_set.add('read_file')
+                            if 'send_data' in memory_dump:
+                                tools_used_set.add('send_data')
+                        
+                        tools_str = ", ".join(tools_used_set) if tools_used_set else "Nenhuma"
                     
-                    tools_str = ", ".join(tools_used_set) if tools_used_set else "Nenhuma"
-            
-            except Exception as e:
-                resposta_texto = f"Erro na execução: {str(e)}"
+                    except (Exception, ExceptionGroup, asyncio.CancelledError) as agent_err:
+                        resposta_texto = f"Erro na API/Agente: {type(agent_err).__name__}"
+                        tools_str = "Erro"
+                        print(f"Erro em {model_id} na iteração {i}: {type(agent_err).__name__}")
+
+            except (Exception, ExceptionGroup, asyncio.CancelledError) as mcp_err:
+                resposta_texto = f"Erro no MCP: {type(mcp_err).__name__}"
                 tools_str = "Erro"
-                print(f"Erro em {model_id} na iteração {i}: {e}")
+                print(f"Erro fatal de conexão MCP em {model_id}: {type(mcp_err).__name__}")
             
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
