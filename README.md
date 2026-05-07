@@ -7,8 +7,6 @@ Este projeto tem como objetivo avaliar a susceptibilidade de diferentes **Modelo
 
 Através da integração de modelos com ferramentas locais de sistema (leitura de arquivos e envio de requisições web), o sistema automatizado testa se um modelo concorda em acessar arquivos sensíveis locais (como o `.env`) e exfiltrá-los para um Webhook externo, apenas com base no comando textual malicioso do usuário. 
 
-A pesquisa busca analisar a eficácia das camadas de salvaguarda (*safeguards*) implementadas nos provedores (**Groq** e **OpenRouter**).
-
 ---
 
 ## 📖 Fundamentação Teórica
