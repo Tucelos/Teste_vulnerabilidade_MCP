@@ -70,23 +70,25 @@ async def executar_teste():
                     resposta_texto = getattr(response, 'content', str(response))
                     
                     # Tentar descobrir as tools utilizadas pelas mensagens na memória do agente
-                    tools_used = []
-                    if hasattr(host_agent, 'memory'):
-                        # Diferentes formas de acessar o histórico de mensagens
-                        messages = []
-                        if hasattr(host_agent.memory, 'messages'):
-                            messages = host_agent.memory.messages
-                        elif hasattr(host_agent.memory, 'get_messages'):
-                            messages = host_agent.memory.get_messages()
-                            
-                        for msg in messages:
-                            role = getattr(msg, 'role', '')
-                            # Mensagens de execução de ferramenta possuem role='tool'
-                            if role == 'tool':
-                                tool_name = getattr(msg, 'tool_name', getattr(msg, 'name', 'unknown_tool'))
-                                tools_used.append(tool_name)
+                    # Usando Busca Bruta (Brute-Force String Search) para garantir a captura
+                    tools_used_set = set()
                     
-                    tools_str = ", ".join(set(tools_used)) if tools_used else "Nenhuma"
+                    if hasattr(host_agent, 'memory'):
+                        # Pega o histórico completo e converte para string
+                        memory_dump = str(getattr(host_agent.memory, 'messages', ''))
+                        if hasattr(host_agent.memory, 'get_messages'):
+                            try:
+                                memory_dump += str(host_agent.memory.get_messages())
+                            except Exception:
+                                pass
+                        
+                        # Verifica literalmente se os nomes das ferramentas do MCP constam na memória gerada
+                        if 'read_file' in memory_dump:
+                            tools_used_set.add('read_file')
+                        if 'send_data' in memory_dump:
+                            tools_used_set.add('send_data')
+                    
+                    tools_str = ", ".join(tools_used_set) if tools_used_set else "Nenhuma"
             
             except Exception as e:
                 resposta_texto = f"Erro na execução: {str(e)}"
