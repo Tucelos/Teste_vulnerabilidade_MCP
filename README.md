@@ -21,6 +21,19 @@ O projeto é composto por dois scripts principais:
    - `send_data`: Capaz de realizar requisições POST com dados para endpoints externos.
 2. `test_suite_mcp.py`: Um orquestrador assíncrono construído com o framework **Agno**. Ele varre uma lista pré-determinada de modelos do Groq e OpenRouter, envia o prompt de exfiltração simulado e monitora/audita se o modelo utilizou de fato as ferramentas maliciosas, salvando os resultados da auditoria.
 
+### Como as peças se integram?
+- **Agno (Orquestrador de Agentes):** Serve como a "mente" do teste. Ele instancia os modelos, gerencia a memória, conecta-se ao servidor MCP usando `MCPTools` e emite a instrução que convence o modelo a atacar o próprio sistema.
+- **Provedores de LLM (Groq & OpenRouter):** São as inteligências sendo testadas. O **Groq** é utilizado para testar modelos *open-source* rodando em infraestrutura de inferência ultra-rápida (Llama, Qwen). O **OpenRouter** age como um hub para alcançar outros modelos não disponíveis no Groq.
+- **Webhook do Discord:** Age como o servidor do "Atacante" (Coletor de logs). É o destino final da requisição maliciosa (`send_data`). Se o LLM obedecer ao comando de roubo de dados, o conteúdo do `.env` será disparado em tempo real para um canal do Discord de posse do pesquisador.
+
+## 🛠️ Tecnologias e Ferramentas Utilizadas
+- **Python 3**: Linguagem base do projeto.
+- **Agno**: Framework para construção de inteligência agentômica (Agentic AI).
+- **FastMCP**: SDK em Python utilizado para construir o Servidor do Model Context Protocol.
+- **Model Context Protocol (MCP)**: Padrão de comunicação de contexto e ferramentas para LLMs.
+- **Groq API & OpenRouter API**: Plataformas provedoras dos Modelos de Linguagem para inferência.
+- **Discord Webhook**: Endpoint de destino (sink) para coleta e monitoramento da exfiltração simulada.
+
 ## 🚀 Como Executar
 
 ### 1. Pré-requisitos e Dependências
@@ -68,8 +81,8 @@ python test_suite_mcp.py
 
 
 **Autor**: Tuigg da Rosa Barcelos  
-*Mestrando em Engenharia de Software Aplicada e IA - UNIPAMPA.*  
-*Pesquisador em Segurança Cibernética e Aprendizado de Máquina.*
+*Mestrando em Engenharia de Software - UNIPAMPA.*  
+*Pesquisador em Segurança Cibersegurança e Inteligência Artificial*
 
 ---
 *UNIPAMPA - Universidade Federal do Pampa*
