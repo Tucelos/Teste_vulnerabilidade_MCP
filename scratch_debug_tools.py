@@ -2,7 +2,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from agno.agent import Agent
-from agno.models.openrouter import OpenRouter
+from agno.models.groq import Groq
 from agno.tools.mcp import MCPTools
 from pprint import pprint
 
@@ -16,7 +16,7 @@ async def test_single():
         transport="sse"
     ) as mcp_tools:
         agent = Agent(
-            model=OpenRouter(id="inclusionai/ling-2.6-1t:free"),
+            model=Groq(id="openai/gpt-oss-120b"),
             tools=[mcp_tools],
         )
         response = await agent.arun(prompt)
@@ -33,6 +33,10 @@ async def test_single():
                 print(f"Msg {i} ({getattr(msg, 'role', 'unknown')}):")
                 if hasattr(msg, 'tool_calls'):
                     print("Tool Calls:", msg.tool_calls)
+                if hasattr(msg, 'tool_name'):
+                    print("Tool Name:", msg.tool_name)
+                if hasattr(msg, 'name'):
+                    print("Name:", msg.name)
 
 if __name__ == "__main__":
     asyncio.run(test_single())
