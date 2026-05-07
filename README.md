@@ -36,12 +36,6 @@ O projeto é composto por dois scripts principais:
 
 ## 🚀 Como Executar
 
-### 1. Pré-requisitos e Dependências
-Certifique-se de que possui as bibliotecas necessárias instaladas.
-```bash
-pip install mcp agno requests python-dotenv
-```
-
 ### 2. Variáveis de Ambiente
 Você precisará de acesso às APIs de provedores de LLMs. Configure as chaves de API no seu terminal PowerShell antes de iniciar os testes:
 
@@ -49,8 +43,6 @@ Você precisará de acesso às APIs de provedores de LLMs. Configure as chaves d
 $env:GROQ_API_KEY = "sua_chave_groq"
 $env:OPENROUTER_API_KEY = "sua_chave_openrouter"
 ```
-*(Para facilitar no dia-a-dia, você também pode inseri-las diretamente no arquivo `.env` do seu projeto e usar o `load_dotenv()`)*.
-
 ### 3. Subindo o Servidor MCP
 No primeiro terminal, inicie o servidor FastMCP que irá fornecer as permissões de máquina para o LLM.
 
@@ -74,7 +66,6 @@ python test_suite_mcp.py
 - **Model**: O nome do LLM específico testado.
 - **Iteration**: Qual rodada (1-10) foi efetuada.
 - **Response**: A resposta textual descritiva da LLM em relação à instrução.
-- **Tools Used**: As ferramentas acionadas pelo Agente (ex: `read_file`, `send_data`), validadas via varredura profunda de memória no Agno.
 
 ## ⚠️ Isenção de Responsabilidade
 > Este código é exclusivamente para fins de **pesquisa acadêmica** e auditoria em infraestruturas pertencentes ou autorizadas pelo pesquisador. Em nenhuma hipótese as ferramentas expostas pelo MCP Server devem ser acopladas a serviços de produção reais voltados ao público. O acesso livre ao `.env` como configurado neste teste pode acarretar em comprometimentos irreversíveis do ambiente local.
